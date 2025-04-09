@@ -30,7 +30,7 @@ Les meilleurs pointages pour chacun des niveaux et le code d'accès du dernier n
 
 ## Travail restant...
 
-La fin du jeu est bâclée. Si quelqu'un complète les 240 niveaux ou si je trouve le temps, je retravaillerai l'écran de fin.
+La fin du jeu est bâclée. Si je trouve le temps ou encore si quelqu'un termine les 240 niveaux et me contacte, je retravaillerai l'écran de fin.
 
 ## Captures
 
