@@ -20,8 +20,8 @@ Cherchez ensuite le fichier d'installation nommé "Mordicus 2 - Setup.exe" dans 
 
 ## Contrôles
 
-Mordicus se dirige avec les flèches du clavier,
-Appuyez sur _Espace_ ou _Entrée_ pour le caractère ✓,
+Mordicus se dirige avec les flèches du clavier.
+Appuyez sur _Espace_ ou _Entrée_ pour le caractère ✓.
 Faites la touche _Échapper_ à tout moment pour abandonner et recommencer le niveau.
 
 Fonctionne également avec une manette de jeu (testé avec une manette de Xbox).
