@@ -43,6 +43,6 @@
   "dependencies": {
     "rxjs": "^7.8.1",
     "electron-squirrel-startup": "^1.0.1",
-    "gamepad-rxjs": "https://github.com/bouc1620/gamepad-rxjs.git"
+    "gamepad-rxjs": "^1.0.1"
   }
 }
