@@ -8,8 +8,7 @@ Cette reproduction a été rendue possible grâce à l'excellent travail de Maxi
 
 ## Installation
 
-La task pour créer l'installateur existe seulement pour Windows. Générez l'installateur Electron avec la task "make".
-Un fichier d'installation nommé "Mordicus 2 - Setup.exe" sera créé dans le dossier ./out/make.
+Le jeu est hébergé sur itch.io à l'adresse [https://bouc1620.itch.io/mordicus-2](https://bouc1620.itch.io/mordicus-2). Ils vous est possible d'y jouer directement dans votre navigateur ou sur votre ordinateur en téléchargeant le fichier d'installation Electron.
 
 ## Contrôles
 
