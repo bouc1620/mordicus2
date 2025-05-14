@@ -6,8 +6,8 @@ export const viewConfig = Object.freeze({
   scalingFactor: 4,
   activeMoveDuration: 170,
   passiveMoveDuration: 350,
-  activeMoveBezierEasing: BezierEasing(0.3, 0, .9, 1),
-  passiveMoveBezierEasing: BezierEasing(.5, 0.5, 0, 1),
+  activeMoveBezierEasing: BezierEasing(0.3, 0, 0.9, 1),
+  passiveMoveBezierEasing: BezierEasing(0.5, 0.9, 0, 1),
 });
 
 export const gameConfig = Object.freeze({
