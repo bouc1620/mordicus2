@@ -37,5 +37,5 @@ export const arrowDirections: { unit: Arrow; direction: DirectionType }[] = [
   },
 ];
 
-export const isDirectionKey = (key: string): key is DirectionType =>
+export const isDirectionKey = (key: unknown): key is DirectionType =>
   all.includes(key as DirectionType);

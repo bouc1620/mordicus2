@@ -10,7 +10,7 @@ if (started) {
 
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
-    width: 1040,
+    width: 1040, // 1500,
     height: 840,
     icon: path.join(
       __dirname,
@@ -20,7 +20,7 @@ const createWindow = () => {
     maximizable: false,
     autoHideMenuBar: true,
     webPreferences: {
-      devTools: false,
+      devTools: false, // true,
     },
   });
 
@@ -33,6 +33,7 @@ const createWindow = () => {
   }
 
   mainWindow.webContents.openDevTools();
+  mainWindow.removeMenu();
 };
 
 app.on('ready', createWindow);

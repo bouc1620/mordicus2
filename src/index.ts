@@ -1,6 +1,11 @@
+import { assert } from 'ts-essentials';
 import { Game } from './mordicus';
 
 window.addEventListener('load', () => {
-  const game = new Game(document.getElementById('canvas') as HTMLCanvasElement);
-  game.start$.subscribe();
+  const canvas = document.getElementById('canvas');
+
+  assert(canvas, 'no canvas element found');
+
+  const game = new Game(canvas as HTMLCanvasElement);
+  game.start$().subscribe();
 });

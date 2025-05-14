@@ -1,11 +1,13 @@
 import { assert } from 'ts-essentials';
-import * as Grid from './grid';
 import { from, Observable, switchMap, tap } from 'rxjs';
 import { fromFetch } from 'rxjs/fetch';
+import * as Grid from './grid';
+
+export type LevelType = 'original' | 'custom';
 
 export type Level = Readonly<{
   grid: Grid.GridType;
-  isCustom: boolean;
+  levelType: LevelType;
   stage: number;
   password: string;
 }>;
@@ -18,57 +20,71 @@ const simpleLength6Hash = (str: string): string =>
 
 const getAugmentedGrid = (
   grid: Grid.GridType,
-  isCustom: boolean,
+  levelType: LevelType,
   index: number,
 ): Omit<Level, 'password'> => ({
   grid,
-  isCustom,
+  levelType,
   stage: index + 1,
 });
 
-const lastPlayedLevelPasswordKey = 'last-level-password';
+export const getBestBonusForLevel = (password: string): number =>
+  Number.parseInt(localStorage.getItem(password) ?? '0');
 
-export const getLastPlayedLevelPassword = (): string | null =>
-  localStorage.getItem(lastPlayedLevelPasswordKey);
+export const updateBestScore = (password: string, bonusLeft: number): void =>
+  localStorage.setItem(
+    password,
+    `${Math.max(bonusLeft, getBestBonusForLevel(password))}`,
+  );
 
-export const setLastPlayedLevelPassword = (password: string): void =>
-  localStorage.setItem(lastPlayedLevelPasswordKey, password);
+const lastLevelPasswordKey = 'last-level-password';
+
+export const getLastLevelPassword = (): string | null =>
+  localStorage.getItem(lastLevelPasswordKey);
+
+export const setLastLevelPassword = (password: string): void =>
+  localStorage.setItem(lastLevelPasswordKey, password);
 
 export class Levels {
-  private _originalLevels = new Map<string, Level>();
-  private _customLevels = new Map<string, Level>();
+  private _originalLevelsMap = new Map<string, Level>();
+  private _customLevelsMap = new Map<string, Level>();
 
-  loadLevels$(): Observable<unknown> {
+  init$(): Observable<unknown> {
     return fromFetch('./levels/levels.json').pipe(
       switchMap((response) => from(response.json())),
       tap((levels: { original: Grid.GridType[]; custom: Grid.GridType[] }) => {
-        for (const [type, list] of Object.entries(levels)) {
-          const isCustom = type === 'custom';
+        for (const [levelType, list] of Object.entries(levels) as [
+          LevelType,
+          Grid.GridType[],
+        ][]) {
           list.forEach((grid, index) => {
             let password = simpleLength6Hash(JSON.stringify(grid));
             while (
-              this._originalLevels.has(password) ||
-              this._customLevels.has(password)
+              this._originalLevelsMap.has(password) ||
+              this._customLevelsMap.has(password)
             ) {
               password = `${Number(password) + 1}`.slice(-6).padStart(6, '0');
             }
 
-            const levelsMap = isCustom ? this._customLevels : this._originalLevels;
+            const levelsMap =
+              levelType === 'original'
+                ? this._originalLevelsMap
+                : this._customLevelsMap;
             levelsMap.set(password, {
-              ...getAugmentedGrid(grid, isCustom, index),
+              ...getAugmentedGrid(grid, levelType, index),
               password,
             });
           });
         }
 
         // // logs all level passwords
-        // for (const levelsMap of [this._originalLevels, this._customLevels]) {
+        // for (const levelsMap of [this._originalLevelsMap, this._customLevelsMap]) {
         //   const iter = levelsMap.entries();
         //   let value;
         //   let stage = 1;
         //   while ((value = iter.next().value)) {
         //     console.log(
-        //       `${value[1].isCustom ? 'custom' : 'original'} level #${stage} password: ${value[0]}`,
+        //       `${value[1].levelType} level #${stage} password: ${value[0]}`,
         //     );
         //     stage++;
         //   }
@@ -78,16 +94,22 @@ export class Levels {
   }
 
   findLevelWithPassword(password: string): Level | undefined {
-    return this._originalLevels.get(password) ?? this._customLevels.get(password);
+    return (
+      this._originalLevelsMap.get(password) ?? this._customLevelsMap.get(password)
+    );
   }
 
-  findLevelWithStageNumber(stage: number, isCustom = false): Level | undefined {
+  findLevelWithStageNumber(
+    stage: number,
+    levelType: 'original' | 'custom' = 'original',
+  ): Level | undefined {
     assert(
       stage > 0,
       `stage number should be an integer greater than zero, requested stage #${stage}`,
     );
 
-    const levelsMap = !isCustom ? this._originalLevels : this._customLevels;
+    const levelsMap =
+      levelType === 'original' ? this._originalLevelsMap : this._customLevelsMap;
     const iter = levelsMap.entries();
     while (--stage > 0) iter.next();
     return iter.next().value?.[1];

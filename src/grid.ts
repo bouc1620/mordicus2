@@ -1,6 +1,6 @@
 import { DeepReadonly } from 'ts-essentials';
-import * as Directions from './directions';
 import { UnitType } from './units';
+import * as Directions from './directions';
 
 type WritableGridType = UnitType[][];
 export type GridType = DeepReadonly<WritableGridType>;

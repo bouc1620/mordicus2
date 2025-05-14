@@ -1,6 +1,5 @@
 import { DeepReadonly } from 'ts-essentials';
 import * as Directions from './directions';
-import { StateSnapshot } from './game-state';
 import * as Logic from './logic';
 import * as Units from './units';
 import * as Grid from './grid';
@@ -19,98 +18,77 @@ const getGridWithChickensReplaced = (
   unit: Units.UnitType,
 ): Grid.GridType => grid.map((row) => row.map((u) => (u === '🐔' ? unit : u)));
 
-const mockState: StateSnapshot = {
-  screen: 'level',
+const mockSnapshot: Logic.ILevelSnapshot = {
   grid: [],
-  score: 0,
   bonus: 0,
-  stage: 1,
   lives: 5,
-  password: '123456',
-  isCustom: true,
-  input: '',
 };
 
 describe('isSuccess', () => {
   it('should be false if mordicus cannot be found on the grid', () => {
     expect(
-      Logic.isSuccess({
-        ...mockState,
-        grid: [
-          ['⬛', '⬛', '⬛'],
-          ['⬛', '🦍', '⬛'],
-          ['⬛', '⬛', '⬛'],
-        ],
-      }),
+      Logic.isSuccess([
+        ['⬛', '⬛', '⬛'],
+        ['⬛', '🦍', '⬛'],
+        ['⬛', '⬛', '⬛'],
+      ]),
     ).toBe(false);
   });
 
   it('should be false if there are still bananas left on the grid', () => {
     expect(
-      Logic.isSuccess({
-        ...mockState,
-        grid: [
-          ['⬛', '🦍', '⬛'],
-          ['🍌', '⬛', '🍌'],
-          ['⬛', '😮', '⬛'],
-        ],
-      }),
+      Logic.isSuccess([
+        ['⬛', '🦍', '⬛'],
+        ['🍌', '⬛', '🍌'],
+        ['⬛', '😮', '⬛'],
+      ]),
     ).toBe(false);
   });
 
   it('should be false if there are still coins left on the grid', () => {
     expect(
-      Logic.isSuccess({
-        ...mockState,
-        grid: [
-          ['⬛', '🦍', '⬛'],
-          ['🟡', '⬛', '🟡'],
-          ['⬛', '😮', '⬛'],
-        ],
-      }),
+      Logic.isSuccess([
+        ['⬛', '🦍', '⬛'],
+        ['🟡', '⬛', '🟡'],
+        ['⬛', '😮', '⬛'],
+      ]),
     ).toBe(false);
   });
 
   it('should be false if there is at least one gorilla surrounding mordicus', () => {
     expect(
-      Logic.isSuccess({
-        ...mockState,
-        grid: [
-          ['⬛', '🦍', '⬛'],
-          ['⬛', '😮', '⬛'],
-          ['⬛', '⬛', '⬛'],
-        ],
-      }),
+      Logic.isSuccess([
+        ['⬛', '🦍', '⬛'],
+        ['⬛', '😮', '⬛'],
+        ['⬛', '⬛', '⬛'],
+      ]),
     ).toBe(false);
   });
 
   it('should be true if mordicus can be found and there are no bananas or coins left on the grid', () => {
     expect(
-      Logic.isSuccess({
-        ...mockState,
-        grid: [
-          ['⬛', '🦍', '⬛'],
-          ['⬛', '⬛', '⬛'],
-          ['⬛', '😮', '⬛'],
-        ],
-      }),
+      Logic.isSuccess([
+        ['⬛', '🦍', '⬛'],
+        ['⬛', '⬛', '⬛'],
+        ['⬛', '😮', '⬛'],
+      ]),
     ).toBe(true);
   });
 });
 
 describe('getActiveMoveResult', () => {
-  it('should return an unchanged state if mordicus tries to move out of bound', () => {
-    const state = {
-      ...mockState,
+  it('should return an unchanged grid if mordicus tries to move out of bound', () => {
+    const snapshot = {
+      ...mockSnapshot,
       grid: [['😮']] as Grid.GridType,
     };
 
     for (const dir of Directions.all) {
-      expect(Logic.getActiveMoveResult(state, dir)).toStrictEqual(state);
+      expect(Logic.getActiveMoveResult(snapshot, dir)).toMatchObject(snapshot);
     }
   });
 
-  it('should return an unchanged state if mordicus is blocked by an unmoveable unit', () => {
+  it('should return an unchanged grid if mordicus is blocked by an unmoveable unit', () => {
     const startGrid = [
       ['⬛', '⬛', '⬛', '⬛', '⬛'],
       ['⬛', '⬛', '🐔', '⬛', '⬛'],
@@ -121,17 +99,17 @@ describe('getActiveMoveResult', () => {
 
     for (const blocker of Units.moveBlockers) {
       for (const dir of Directions.all) {
-        const state = {
-          ...mockState,
+        const snapshot = {
+          ...mockSnapshot,
           grid: getGridWithChickensReplaced(startGrid, blocker),
         };
 
-        expect(Logic.getActiveMoveResult(state, dir)).toStrictEqual(state);
+        expect(Logic.getActiveMoveResult(snapshot, dir)).toMatchObject(snapshot);
       }
     }
   });
 
-  it(`should return an unchanged state if there's a grid boundary directly behind moveable units`, () => {
+  it(`should return an unchanged grid if there's a grid boundary directly behind moveable units`, () => {
     const startGrid = [
       ['⬛', '🐔', '⬛'],
       ['🐔', '😮', '🐔'],
@@ -140,17 +118,17 @@ describe('getActiveMoveResult', () => {
 
     for (const unit of Units.moveables) {
       for (const dir of Directions.all) {
-        const state = {
-          ...mockState,
+        const snapshot = {
+          ...mockSnapshot,
           grid: getGridWithChickensReplaced(startGrid, unit),
         };
 
-        expect(Logic.getActiveMoveResult(state, dir)).toStrictEqual(state);
+        expect(Logic.getActiveMoveResult(snapshot, dir)).toMatchObject(snapshot);
       }
     }
   });
 
-  it(`should return an unchanged state if there's a grid boundary directly behind an arrow`, () => {
+  it(`should return an unchanged grid if there's a grid boundary directly behind an arrow`, () => {
     const startGrid = [
       ['🟥', '🟥', '⬆️', '🟥', '🟥'],
       ['🟥', '🟥', '⬇️', '🟥', '🟥'],
@@ -160,16 +138,16 @@ describe('getActiveMoveResult', () => {
     ] as Grid.GridType;
 
     for (const dir of Directions.all) {
-      const state = {
-        ...mockState,
+      const snapshot = {
+        ...mockSnapshot,
         grid: startGrid,
       };
 
-      expect(Logic.getActiveMoveResult(state, dir)).toStrictEqual(state);
+      expect(Logic.getActiveMoveResult(snapshot, dir)).toMatchObject(snapshot);
     }
   });
 
-  it(`should return an unchanged state if there's a push blocking unit directly behind moveable units`, () => {
+  it(`should return an unchanged grid if there's a push blocking unit directly behind moveable units`, () => {
     const startGrid = [
       ['⬛', '⬛', '⬛', '⬛', '⬛', '⬛', '⬛', '⬛', '⬛', '⬛', '⬛'],
       ['⬛', '⬛', '⬛', '⬛', '⬛', '🐔', '⬛', '⬛', '⬛', '⬛', '⬛'],
@@ -186,12 +164,12 @@ describe('getActiveMoveResult', () => {
 
     for (const pushBlocker of Units.pushBlockers) {
       for (const dir of Directions.all) {
-        const state = {
-          ...mockState,
+        const snapshot = {
+          ...mockSnapshot,
           grid: getGridWithChickensReplaced(startGrid, pushBlocker),
         };
 
-        expect(Logic.getActiveMoveResult(state, dir)).toStrictEqual(state);
+        expect(Logic.getActiveMoveResult(snapshot, dir)).toMatchObject(snapshot);
       }
     }
   });
@@ -246,17 +224,17 @@ describe('getActiveMoveResult', () => {
     sequence.reduce(
       (accState, currTest) => {
         const result = Logic.getActiveMoveResult(accState, currTest.dir);
-        expect(result).toStrictEqual({
-          ...mockState,
+        expect(result).toMatchObject({
+          ...mockSnapshot,
           grid: currTest.grid,
         });
 
         return result;
       },
       {
-        ...mockState,
+        ...mockSnapshot,
         grid: startGrid,
-      } as StateSnapshot,
+      },
     );
   });
 
@@ -303,17 +281,17 @@ describe('getActiveMoveResult', () => {
     sequence.reduce(
       (accState, currTest) => {
         const result = Logic.getActiveMoveResult(accState, currTest.dir);
-        expect(result).toStrictEqual({
-          ...mockState,
+        expect(result).toMatchObject({
+          ...mockSnapshot,
           grid: currTest.grid,
         });
 
         return result;
       },
       {
-        ...mockState,
+        ...mockSnapshot,
         grid: startGrid,
-      } as StateSnapshot,
+      },
     );
   });
 
@@ -403,17 +381,17 @@ describe('getActiveMoveResult', () => {
     sequence.reduce(
       (accState, currTest) => {
         const result = Logic.getActiveMoveResult(accState, currTest.dir);
-        expect(result).toStrictEqual({
-          ...mockState,
+        expect(result).toMatchObject({
+          ...mockSnapshot,
           grid: currTest.grid,
         });
 
         return result;
       },
       {
-        ...mockState,
+        ...mockSnapshot,
         grid: startGrid,
-      } as StateSnapshot,
+      },
     );
   });
 
@@ -481,13 +459,13 @@ describe('getActiveMoveResult', () => {
       expect(
         Logic.getActiveMoveResult(
           {
-            ...mockState,
+            ...mockSnapshot,
             grid: startGrid,
           },
           dir,
         ),
-      ).toStrictEqual({
-        ...mockState,
+      ).toMatchObject({
+        ...mockSnapshot,
         grid: expected,
       });
     }
@@ -504,11 +482,11 @@ describe('getPassiveMovesResult', () => {
 
     expect(
       Logic.getPassiveMovesResult({
-        ...mockState,
+        ...mockSnapshot,
         grid: startGrid,
       }),
-    ).toStrictEqual({
-      ...mockState,
+    ).toMatchObject({
+      ...mockSnapshot,
       grid: [
         ['🦍', '⬛', '🦍'],
         ['⬛', '🦍', '⬛'],
@@ -570,17 +548,17 @@ describe('getPassiveMovesResult', () => {
     sequence.reduce(
       (accState, currTest) => {
         const result = Logic.getPassiveMovesResult(accState);
-        expect(result).toStrictEqual({
-          ...mockState,
+        expect(result).toMatchObject({
+          ...mockSnapshot,
           grid: currTest,
         });
 
         return result;
       },
       {
-        ...mockState,
+        ...mockSnapshot,
         grid: startGrid,
-      } as StateSnapshot,
+      },
     );
   });
 
@@ -595,11 +573,11 @@ describe('getPassiveMovesResult', () => {
 
     expect(
       Logic.getPassiveMovesResult({
-        ...mockState,
+        ...mockSnapshot,
         grid: startGrid,
       }),
-    ).toStrictEqual({
-      ...mockState,
+    ).toMatchObject({
+      ...mockSnapshot,
       grid: [
         ['⬛', '⬛', '🦍', '⬛', '⬛'],
         ['⬛', '🦍', '⬛', '🦍', '⬛'],
@@ -619,11 +597,11 @@ describe('getPassiveMovesResult', () => {
 
     expect(
       Logic.getPassiveMovesResult({
-        ...mockState,
+        ...mockSnapshot,
         grid: startGrid,
       }),
-    ).toStrictEqual({
-      ...mockState,
+    ).toMatchObject({
+      ...mockSnapshot,
       grid: [
         ['🐵', '⬛', '🐵'],
         ['⬛', '🙈', '⬛'],
@@ -661,17 +639,17 @@ describe('getPassiveMovesResult', () => {
     sequence.reduce(
       (accState, currTest) => {
         const result = Logic.getPassiveMovesResult(accState);
-        expect(result).toStrictEqual({
-          ...mockState,
+        expect(result).toMatchObject({
+          ...mockSnapshot,
           grid: currTest,
         });
 
         return result;
       },
       {
-        ...mockState,
+        ...mockSnapshot,
         grid: startGrid,
-      } as StateSnapshot,
+      },
     );
   });
 
@@ -686,11 +664,11 @@ describe('getPassiveMovesResult', () => {
 
     expect(
       Logic.getPassiveMovesResult({
-        ...mockState,
+        ...mockSnapshot,
         grid: startGrid,
       }),
-    ).toStrictEqual({
-      ...mockState,
+    ).toMatchObject({
+      ...mockSnapshot,
       grid: [
         ['⬛', '⬛', '🙈', '⬛', '⬛'],
         ['⬛', '🙈', '⬛', '🙈', '⬛'],
@@ -730,17 +708,17 @@ describe('getPassiveMovesResult', () => {
     sequence.reduce(
       (accState, currTest) => {
         const result = Logic.getPassiveMovesResult(accState);
-        expect(result).toStrictEqual({
-          ...mockState,
+        expect(result).toMatchObject({
+          ...mockSnapshot,
           grid: currTest,
         });
 
         return result;
       },
       {
-        ...mockState,
+        ...mockSnapshot,
         grid: startGrid,
-      } as StateSnapshot,
+      },
     );
   });
 
@@ -772,17 +750,17 @@ describe('getPassiveMovesResult', () => {
     sequence.reduce(
       (accState, currTest) => {
         const result = Logic.getPassiveMovesResult(accState);
-        expect(result).toStrictEqual({
-          ...mockState,
+        expect(result).toMatchObject({
+          ...mockSnapshot,
           grid: currTest,
         });
 
         return result;
       },
       {
-        ...mockState,
+        ...mockSnapshot,
         grid: startGrid,
-      } as StateSnapshot,
+      },
     );
   });
 
@@ -835,17 +813,17 @@ describe('getPassiveMovesResult', () => {
       sequence.reduce(
         (accState, currTest) => {
           const result = Logic.getPassiveMovesResult(accState);
-          expect(result).toStrictEqual({
-            ...mockState,
+          expect(result).toMatchObject({
+            ...mockSnapshot,
             grid: getGridWithChickensReplaced(currTest, unit),
           });
 
           return result;
         },
         {
-          ...mockState,
+          ...mockSnapshot,
           grid: getGridWithChickensReplaced(startGrid, unit),
-        } as StateSnapshot,
+        },
       );
     }
   });
@@ -885,17 +863,17 @@ describe('getPassiveMovesResult', () => {
     sequence.reduce(
       (accState, currTest) => {
         const result = Logic.getPassiveMovesResult(accState);
-        expect(result).toStrictEqual({
-          ...mockState,
+        expect(result).toMatchObject({
+          ...mockSnapshot,
           grid: currTest,
         });
 
         return result;
       },
       {
-        ...mockState,
+        ...mockSnapshot,
         grid: startGrid,
-      } as StateSnapshot,
+      },
     );
   });
 });
