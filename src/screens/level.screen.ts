@@ -27,6 +27,7 @@ import { createLevelCompleteScreenFn$ } from './level-complete.screen';
 
 export interface ILevelScreenData {
   level: Level;
+  completed: number;
   score: number;
   lives: number;
 }
@@ -135,9 +136,10 @@ export const createLevelScreenFn$ = (data: ILevelScreenData): ScreenFn$ => {
               game.screenFn$$.next(
                 createLevelCompleteScreenFn$({
                   level: state.level,
-                  lives: state.lives,
+                  completed: state.completed,
                   previousScore: state.score,
                   newScore: state.score + gameConfig.pointsPerLevel + state.bonus,
+                  lives: state.lives,
                 }),
               );
             }

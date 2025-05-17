@@ -34,6 +34,7 @@ export const createUsePasswordQueryScreenFn$ = (): ScreenFn$ => {
           game.screenFn$$.next(
             createLevelScreenFn$({
               level,
+              completed: 0,
               score: 0,
               lives: gameConfig.startLives,
             }),

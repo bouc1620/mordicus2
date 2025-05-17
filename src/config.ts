@@ -7,12 +7,13 @@ export const viewConfig = Object.freeze({
   activeMoveDuration: 170,
   passiveMoveDuration: 350,
   activeMoveBezierEasing: BezierEasing(0.3, 0, 0.9, 1),
-  passiveMoveBezierEasing: BezierEasing(0.5, 0.9, 0, 1),
+  passiveMoveBezierEasing: BezierEasing(0.16, 1, 0.3, 1),
 });
 
 export const gameConfig = Object.freeze({
   startBonus: 1000,
   pointsPerLevel: 1000,
   startLives: 5,
+  gainLifeAfterXLevels: 5,
   levelType: 'original',
 });
