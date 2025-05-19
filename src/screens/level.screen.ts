@@ -14,8 +14,8 @@ import {
   takeWhile,
   tap,
 } from 'rxjs';
-import { gameConfig, viewConfig } from '../config';
-import { Level, setLastLevelPassword, updateBestScore } from '../levels';
+import { getGameConfig, viewConfig } from '../config';
+import { Level, updateBestScore } from '../levels';
 import { XBoxGamepadButtons } from '../gamepad-events';
 import * as Grid from '../grid';
 import * as Logic from '../logic';
@@ -27,7 +27,6 @@ import { createLevelCompleteScreenFn$ } from './level-complete.screen';
 
 export interface ILevelScreenData {
   level: Level;
-  completed: number;
   score: number;
   lives: number;
 }
@@ -37,18 +36,47 @@ interface ILevelScreenState extends ILevelScreenData {
   bonus: number;
 }
 
+class UndoRedoStack {
+  private _list: Logic.ILevelSnapshot[] = [];
+  private _pos = 0;
+
+  undo(): Logic.ILevelSnapshot | undefined {
+    this._pos = Math.max(0, this._pos - 1);
+    return this._list[this._pos];
+  }
+
+  redo(): Logic.ILevelSnapshot | undefined {
+    this._pos = Math.min(this._list.length - 1, this._pos + 1);
+    return this._list[this._pos];
+  }
+
+  push(snapshot: Logic.ILevelSnapshot): void {
+    this._list = this._list.slice(0, this._pos + 1);
+    this._list.push(snapshot);
+    this._pos = this._list.length - 1;
+  }
+}
+
 export const createLevelScreenFn$ = (data: ILevelScreenData): ScreenFn$ => {
   const state: ILevelScreenState = {
     ...data,
     grid: Grid.copyGrid(data.level.grid),
-    bonus: gameConfig.startBonus,
+    bonus: getGameConfig().startBonus,
   };
 
-  if (state.level.stage > 1) {
-    setLastLevelPassword(state.level.password);
-  }
+  const undoStack = getGameConfig().undoMoveEnabled
+    ? new UndoRedoStack()
+    : undefined;
 
   return (game: Game) => {
+    // avoid overwritting the saved password with the first available password
+    if (
+      game.levels.getCurrentPassword(state.level.stage) !==
+      game.levels.getFirstPassword()
+    ) {
+      game.levels.saveCurrentPassword(state.level.stage);
+    }
+
     drawSync(game, state);
 
     return merge(
@@ -71,7 +99,7 @@ export const createLevelScreenFn$ = (data: ILevelScreenData): ScreenFn$ => {
               drawInGameMenu(game, state);
 
               if (state.lives === 0) {
-                game.screenFn$$.next(createGameOverScreenFn$(state.level.password));
+                game.screenFn$$.next(createGameOverScreenFn$(state.level.stage));
               } else {
                 game.screenFn$$.next(createRetryLevelQueryScreenFn$(state));
               }
@@ -81,22 +109,64 @@ export const createLevelScreenFn$ = (data: ILevelScreenData): ScreenFn$ => {
 
         return merge(
           of(undefined),
-          game.keyboardEvents.direction$,
-          game.gamepadEvents.direction$,
+          merge(game.keyboardEvents.direction$, game.gamepadEvents.direction$),
+          merge(
+            game.keyboardEvents.all$.pipe(filter((key) => key === 'z')),
+            merge(
+              game.gamepadEvents.buttonPressed$(XBoxGamepadButtons.LB),
+              game.gamepadEvents.buttonRepeat$(XBoxGamepadButtons.LB, {
+                delay: 30,
+                initialDelay: 500,
+              }),
+            ),
+          ).pipe(map(() => 'undo' as const)),
+          merge(
+            game.keyboardEvents.all$.pipe(filter((key) => key === 'y')),
+            merge(
+              game.gamepadEvents.buttonPressed$(XBoxGamepadButtons.RB),
+              game.gamepadEvents.buttonRepeat$(XBoxGamepadButtons.RB, {
+                delay: 30,
+                initialDelay: 500,
+              }),
+            ),
+          ).pipe(map(() => 'redo' as const)),
         ).pipe(
-          exhaustMap((dir) => {
+          exhaustMap((key) => {
+            if (key === 'undo' || key === 'redo') {
+              return of(undefined).pipe(
+                tap(() => {
+                  const recoveredState =
+                    key === 'undo' ? undoStack?.undo() : undoStack?.redo();
+
+                  if (!recoveredState) {
+                    return;
+                  }
+
+                  state.grid = Grid.copyGrid(recoveredState.grid);
+                  state.bonus = recoveredState.bonus;
+                  state.lives = recoveredState.lives;
+
+                  drawSync(game, state);
+                }),
+              );
+            }
+
             const snapshot = {
               grid: Grid.copyGrid(state.grid),
               bonus: state.bonus,
               lives: state.lives,
             };
 
-            const moveQueue = !dir
+            const moveQueue = !key
               ? [
                   { ...snapshot, moves: [] },
                   ...Logic.getResolvedStateResults(snapshot),
                 ]
-              : Logic.getMoveQueue(snapshot, dir);
+              : Logic.getMoveQueue(snapshot, key);
+
+            if (moveQueue.length === 0) {
+              return of(undefined);
+            }
 
             return concat(
               ...moveQueue.map((stateTransition, index) => {
@@ -123,26 +193,34 @@ export const createLevelScreenFn$ = (data: ILevelScreenData): ScreenFn$ => {
                   );
                 });
               }),
-            );
-          }),
-          tap(() => {
-            if (state.lives === 0) {
-              game.screenFn$$.next(createGameOverScreenFn$(state.level.password));
-            } else if (Logic.isPlayerDead(state.grid)) {
-              game.screenFn$$.next(createRetryLevelQueryScreenFn$(state));
-            } else if (Logic.isSuccess(state.grid)) {
-              updateBestScore(state.level.password, state.bonus);
+            ).pipe(
+              last(),
+              tap(() => {
+                if (state.lives === 0) {
+                  game.screenFn$$.next(createGameOverScreenFn$(state.level.stage));
+                } else if (Logic.isPlayerDead(state.grid)) {
+                  game.screenFn$$.next(createRetryLevelQueryScreenFn$(state));
+                } else if (Logic.isSuccess(state.grid)) {
+                  updateBestScore(state.level.password, state.bonus);
 
-              game.screenFn$$.next(
-                createLevelCompleteScreenFn$({
-                  level: state.level,
-                  completed: state.completed,
-                  previousScore: state.score,
-                  newScore: state.score + gameConfig.pointsPerLevel + state.bonus,
+                  game.screenFn$$.next(
+                    createLevelCompleteScreenFn$({
+                      level: state.level,
+                      previousScore: state.score,
+                      newScore:
+                        state.score + getGameConfig().pointsPerLevel + state.bonus,
+                      lives: state.lives,
+                    }),
+                  );
+                }
+
+                undoStack?.push({
+                  grid: Grid.copyGrid(state.grid),
+                  bonus: state.bonus,
                   lives: state.lives,
-                }),
-              );
-            }
+                });
+              }),
+            );
           }),
         );
       }),

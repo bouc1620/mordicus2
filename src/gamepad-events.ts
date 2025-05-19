@@ -31,6 +31,7 @@ export enum XBoxGamepadButtons {
   RIGHT,
   XBOX,
 }
+
 export interface GamepadRepeatConfig {
   delay?: number;
   initialDelay?: number;

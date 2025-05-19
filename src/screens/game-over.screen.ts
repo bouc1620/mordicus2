@@ -2,8 +2,10 @@ import { merge, tap } from 'rxjs';
 import { Game, ScreenFn$ } from '../mordicus';
 import { createTitleScreenFn$ } from './title.screen';
 
-export const createGameOverScreenFn$ = (password: string): ScreenFn$ => {
+export const createGameOverScreenFn$ = (stage: number): ScreenFn$ => {
   return (game: Game) => {
+    const password = game.levels.getCurrentPassword(stage);
+
     drawSync(game, password);
 
     return merge(game.keyboardEvents.confirm$, game.gamepadEvents.confirm$).pipe(
@@ -14,10 +16,10 @@ export const createGameOverScreenFn$ = (password: string): ScreenFn$ => {
   };
 };
 
-const drawSync = (game: Game, password: string): void => {
-  game.canvas.drawDialog([
-    'VOICI VOTRE',
-    `CODE D'ACCÈS: ${password}`,
-    'APPUYEZ SUR ✓',
-  ]);
+const drawSync = (game: Game, password: string | undefined): void => {
+  game.canvas.drawDialog(
+    password
+      ? ['VOICI VOTRE', `CODE D'ACCÈS: ${password}`, 'APPUYEZ SUR ✓']
+      : ['', 'APPUYEZ SUR ✓'],
+  );
 };

@@ -63,7 +63,7 @@ export class Canvas {
           image,
           ...viewBox,
           (origin.x === 'center'
-            ? this.getCenterAlignXPos(text.length * 10) + 1
+            ? this.getCenterAlignXPos(text.length * 10)
             : origin.x) +
             10 * index,
           origin.y,

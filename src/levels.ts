@@ -1,6 +1,7 @@
 import { assert } from 'ts-essentials';
 import { from, Observable, switchMap, tap } from 'rxjs';
 import { fromFetch } from 'rxjs/fetch';
+import { getGameConfig } from './config';
 import * as Grid from './grid';
 
 export type LevelType = 'original' | 'custom';
@@ -39,11 +40,9 @@ export const updateBestScore = (password: string, bonusLeft: number): void =>
 
 const lastLevelPasswordKey = 'last-level-password';
 
-export const getLastLevelPassword = (): string | null =>
-  localStorage.getItem(lastLevelPasswordKey);
-
-export const setLastLevelPassword = (password: string): void =>
-  localStorage.setItem(lastLevelPasswordKey, password);
+export const getSavedPassword = (): string | undefined => {
+  return localStorage.getItem(lastLevelPasswordKey) ?? undefined;
+};
 
 export class Levels {
   private _originalLevelsMap = new Map<string, Level>();
@@ -77,7 +76,7 @@ export class Levels {
           });
         }
 
-        // // logs all level passwords
+        // // log all level passwords
         // for (const levelsMap of [this._originalLevelsMap, this._customLevelsMap]) {
         //   const iter = levelsMap.entries();
         //   let value;
@@ -113,5 +112,34 @@ export class Levels {
     const iter = levelsMap.entries();
     while (--stage > 0) iter.next();
     return iter.next().value?.[1];
+  }
+
+  getFirstPassword(): string | undefined {
+    const gameConfig = getGameConfig();
+    return this.getCurrentPassword(
+      Math.max(gameConfig.getPasswordEveryXLevels - 1, 1),
+    );
+  }
+
+  getCurrentPassword(stage: number): string | undefined {
+    const gameConfig = getGameConfig();
+    const checkpointStage = Math.max(
+      ~~(stage / gameConfig.getPasswordEveryXLevels) *
+        gameConfig.getPasswordEveryXLevels,
+      1,
+    );
+
+    return this.findLevelWithStageNumber(checkpointStage, gameConfig.levelType)
+      ?.password;
+  }
+
+  saveCurrentPassword(stage: number): void {
+    const password = this.getCurrentPassword(stage);
+
+    if (!password) {
+      return;
+    }
+
+    localStorage.setItem(lastLevelPasswordKey, password);
   }
 }

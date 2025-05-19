@@ -11,7 +11,7 @@ interface IGameCompleteScreenData {
 export const createGameCompleteScreenFn$ = (
   data: IGameCompleteScreenData,
 ): ScreenFn$ => {
-	updateBestTotalScore(data.levelType, data.score);
+  updateBestTotalScore(data.levelType, data.score);
 
   return (game: Game) => {
     drawSync(game, data);

@@ -34,13 +34,18 @@ export const getMoveQueue = (
   dir: Directions.DirectionType,
 ): ReadonlyArray<ILevelStateTransition> => {
   const moveResult = getActiveMoveResult(snapshot, dir);
+
+  if (!moveResult) {
+    return [];
+  }
+
   return [moveResult, ...getResolvedStateResults(moveResult)];
 };
 
 export const getActiveMoveResult = (
   snapshot: ILevelSnapshot,
   dir: Directions.DirectionType,
-): ILevelStateTransition => {
+): ILevelStateTransition | undefined => {
   const mordicus = Grid.findMordicus(snapshot.grid);
 
   assert(mordicus, 'invalid grid, no Mordicus character found');
@@ -54,11 +59,6 @@ export const getActiveMoveResult = (
   ) {
     return getPushMoveResult(snapshot, dir);
   }
-
-  return {
-    ...snapshot,
-    moves: [],
-  };
 };
 
 export const getPassiveMovesResult = (
@@ -137,7 +137,7 @@ const getFreeMoveResult = (
 const getPushMoveResult = (
   snapshot: ILevelSnapshot,
   dir: Directions.DirectionType,
-): ILevelStateTransition => {
+): ILevelStateTransition | undefined => {
   const mordicus = Grid.findMordicus(snapshot.grid);
 
   assert(mordicus, 'invalid grid, no Mordicus character found');
@@ -160,10 +160,7 @@ const getPushMoveResult = (
     !unitForward ||
     Units.pushBlockers.some((pushBlocker) => pushBlocker === unitForward)
   ) {
-    return {
-      ...snapshot,
-      moves: [],
-    };
+    return undefined;
   }
 
   const moves: Directions.Move[] = [...moved].reverse().map((pos) => ({

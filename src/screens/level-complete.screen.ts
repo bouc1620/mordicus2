@@ -4,11 +4,10 @@ import { getBestBonusForLevel, Level } from '../levels';
 import { Game, ScreenFn$ } from '../mordicus';
 import { createLevelScreenFn$ } from './level.screen';
 import { createGameCompleteScreenFn$ } from './game-complete.screen';
-import { gameConfig } from '../config';
+import { getGameConfig } from '../config';
 
 export const createLevelCompleteScreenFn$ = (data: {
   level: Level;
-  completed: number;
   previousScore: number;
   newScore: number;
   lives: number;
@@ -40,10 +39,11 @@ export const createLevelCompleteScreenFn$ = (data: {
           );
 
           if (nextLevel) {
-            const completed = data.completed + 1;
+            const gainNewLifeAfterXPoints = getGameConfig().gainNewLifeAfterXPoints;
             const lives = Math.min(
               data.lives +
-                (completed > 0 && completed % gameConfig.gainLifeAfterXLevels === 0
+                (~~(data.previousScore / gainNewLifeAfterXPoints) <
+                ~~(data.newScore / gainNewLifeAfterXPoints)
                   ? 1
                   : 0),
               99,
@@ -52,7 +52,6 @@ export const createLevelCompleteScreenFn$ = (data: {
             game.screenFn$$.next(
               createLevelScreenFn$({
                 level: nextLevel,
-                completed,
                 score: data.newScore,
                 lives,
               }),

@@ -1,4 +1,4 @@
-import { DeepReadonly } from 'ts-essentials';
+import { assert, DeepReadonly } from 'ts-essentials';
 import * as Directions from './directions';
 import * as Logic from './logic';
 import * as Units from './units';
@@ -77,18 +77,18 @@ describe('isSuccess', () => {
 });
 
 describe('getActiveMoveResult', () => {
-  it('should return an unchanged grid if mordicus tries to move out of bound', () => {
+  it('should return undefined if mordicus tries to move out of bound', () => {
     const snapshot = {
       ...mockSnapshot,
       grid: [['😮']] as Grid.GridType,
     };
 
     for (const dir of Directions.all) {
-      expect(Logic.getActiveMoveResult(snapshot, dir)).toMatchObject(snapshot);
+      expect(Logic.getActiveMoveResult(snapshot, dir)).toBeUndefined();
     }
   });
 
-  it('should return an unchanged grid if mordicus is blocked by an unmoveable unit', () => {
+  it('should return undefined if mordicus is blocked by an unmoveable unit', () => {
     const startGrid = [
       ['⬛', '⬛', '⬛', '⬛', '⬛'],
       ['⬛', '⬛', '🐔', '⬛', '⬛'],
@@ -104,12 +104,12 @@ describe('getActiveMoveResult', () => {
           grid: getGridWithChickensReplaced(startGrid, blocker),
         };
 
-        expect(Logic.getActiveMoveResult(snapshot, dir)).toMatchObject(snapshot);
+        expect(Logic.getActiveMoveResult(snapshot, dir)).toBeUndefined();
       }
     }
   });
 
-  it(`should return an unchanged grid if there's a grid boundary directly behind moveable units`, () => {
+  it('should return undefined if there is a grid boundary directly behind moveable units', () => {
     const startGrid = [
       ['⬛', '🐔', '⬛'],
       ['🐔', '😮', '🐔'],
@@ -123,12 +123,12 @@ describe('getActiveMoveResult', () => {
           grid: getGridWithChickensReplaced(startGrid, unit),
         };
 
-        expect(Logic.getActiveMoveResult(snapshot, dir)).toMatchObject(snapshot);
+        expect(Logic.getActiveMoveResult(snapshot, dir)).toBeUndefined();
       }
     }
   });
 
-  it(`should return an unchanged grid if there's a grid boundary directly behind an arrow`, () => {
+  it('should return undefined if there is a grid boundary directly behind an arrow', () => {
     const startGrid = [
       ['🟥', '🟥', '⬆️', '🟥', '🟥'],
       ['🟥', '🟥', '⬇️', '🟥', '🟥'],
@@ -143,11 +143,11 @@ describe('getActiveMoveResult', () => {
         grid: startGrid,
       };
 
-      expect(Logic.getActiveMoveResult(snapshot, dir)).toMatchObject(snapshot);
+      expect(Logic.getActiveMoveResult(snapshot, dir)).toBeUndefined();
     }
   });
 
-  it(`should return an unchanged grid if there's a push blocking unit directly behind moveable units`, () => {
+  it('should return undefined if there is a push blocking unit directly behind moveable units', () => {
     const startGrid = [
       ['⬛', '⬛', '⬛', '⬛', '⬛', '⬛', '⬛', '⬛', '⬛', '⬛', '⬛'],
       ['⬛', '⬛', '⬛', '⬛', '⬛', '🐔', '⬛', '⬛', '⬛', '⬛', '⬛'],
@@ -169,7 +169,7 @@ describe('getActiveMoveResult', () => {
           grid: getGridWithChickensReplaced(startGrid, pushBlocker),
         };
 
-        expect(Logic.getActiveMoveResult(snapshot, dir)).toMatchObject(snapshot);
+        expect(Logic.getActiveMoveResult(snapshot, dir)).toBeUndefined();
       }
     }
   });
@@ -224,6 +224,9 @@ describe('getActiveMoveResult', () => {
     sequence.reduce(
       (accState, currTest) => {
         const result = Logic.getActiveMoveResult(accState, currTest.dir);
+
+        assert(result);
+
         expect(result).toMatchObject({
           ...mockSnapshot,
           grid: currTest.grid,
@@ -281,6 +284,9 @@ describe('getActiveMoveResult', () => {
     sequence.reduce(
       (accState, currTest) => {
         const result = Logic.getActiveMoveResult(accState, currTest.dir);
+
+        assert(result);
+
         expect(result).toMatchObject({
           ...mockSnapshot,
           grid: currTest.grid,
@@ -295,7 +301,7 @@ describe('getActiveMoveResult', () => {
     );
   });
 
-  it(`should push the rows of units forward if they are moveable units and there's at least one empty space behind them`, () => {
+  it('should push the rows of units forward if they are moveable units and there is at least one empty space behind them', () => {
     const startGrid = [
       ['⬛', '⬛', '⬛', '⬛', '⬛', '⬛', '⬛', '⬛', '⬛'],
       ['⬛', '⬛', '⬛', '⬛', '⬇️', '⬛', '⬛', '⬛', '⬛'],
@@ -381,6 +387,9 @@ describe('getActiveMoveResult', () => {
     sequence.reduce(
       (accState, currTest) => {
         const result = Logic.getActiveMoveResult(accState, currTest.dir);
+
+        assert(result);
+
         expect(result).toMatchObject({
           ...mockSnapshot,
           grid: currTest.grid,

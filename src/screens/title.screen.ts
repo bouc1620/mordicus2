@@ -1,6 +1,6 @@
 import { filter, merge, tap } from 'rxjs';
 import { XBoxGamepadButtons } from '../gamepad-events';
-import { viewConfig } from '../config';
+import { getGameConfig, toggleUseOriginalGameConfig, viewConfig } from '../config';
 import { ScreenFn$, Game } from '../mordicus';
 import { createUsePasswordQueryScreenFn$ } from './use-password-query.screen';
 
@@ -20,7 +20,7 @@ export const createTitleScreenFn$ = (): ScreenFn$ => {
         ),
       ).pipe(
         tap(() => {
-          toggleUseOriginalTitleScreen();
+          toggleUseOriginalGameConfig();
           drawSync(game);
         }),
       ),
@@ -38,23 +38,9 @@ export const createTitleScreenFn$ = (): ScreenFn$ => {
   };
 };
 
-const titleScreenStorageKey = 'use-original-title';
-
-const displayOriginalTitleScreen = (): boolean => {
-  return !!localStorage.getItem(titleScreenStorageKey);
-};
-
-const toggleUseOriginalTitleScreen = (): void => {
-  if (displayOriginalTitleScreen()) {
-    localStorage.removeItem(titleScreenStorageKey);
-  } else {
-    localStorage.setItem(titleScreenStorageKey, 'true');
-  }
-};
-
 const drawSync = (game: Game): void => {
   game.canvas.clearScreen('#000040');
-  if (!displayOriginalTitleScreen()) {
+  if (getGameConfig().gameType === 'remake') {
     drawSimpleTitleScreen(game);
   } else {
     drawOriginalTitleScreen(game);
@@ -82,7 +68,7 @@ const drawOriginalTitleScreen = (game: Game): void => {
   game.canvas.context.drawImage(
     game.images.getMenu('original-game-title'),
     game.canvas.getCenterAlignXPos(229),
-    13,
+    14,
   );
 
   const [sprite1, viewBox1] = game.images.getSprite(
@@ -105,7 +91,7 @@ const drawOriginalTitleScreen = (game: Game): void => {
   game.canvas.context.drawImage(
     sprite2,
     ...viewBox2,
-    viewConfig.width - 57,
+    viewConfig.width - 56,
     53,
     viewBox2[2],
     viewBox2[3],
@@ -114,12 +100,12 @@ const drawOriginalTitleScreen = (game: Game): void => {
   let yPos = 0;
   const lines: [text: string, relativeYPos: number][] = [
     ['VERSION 2.00', 59],
-    [`DROITS D'AUTEUR`, 31],
+    [`DROITS D'AUTEUR`, 30],
     ['LE GROUPE VIDÉOTRON LTÉE', 12],
     ['TOUS DROITS RÉSERVÉS', 18],
     ['DÉVELOPPÉ PAR', 18],
     ['LOTO-QUÉBEC', 12],
-    ['POUR COMMENCER, ✓', 31],
+    ['POUR COMMENCER, ✓', 32],
   ];
 
   for (const [text, yPosIncrement] of lines) {
