@@ -17,7 +17,9 @@ La task pour générer l'installateur existe seulement pour Windows. Générez l
 Mordicus se dirige avec les flèches du clavier.
 Appuyez sur _Espace_ ou _Entrée_ pour le caractère ✓.
 Faites la touche _Échap_ à tout moment pour abandonner et recommencer le niveau.
-Fonctionne également avec une manette de jeu (testé avec une manette de Xbox).
+À la difficulté facile, cette reproduction comporte une fonction "undo/redo" qui annule ou réexécute un coup. Utilisez la avec les touches _Z_ et _Y_.
+
+Fonctionne également avec une manette de jeu (développé avec une manette de Xbox).
 
 Les meilleurs pointages pour chacun des niveaux et le code d'accès du dernier niveau joué sont sauvegardés en localStorage, ils persistent après la fermeture de l'application.
 
