@@ -14,7 +14,7 @@ La task pour générer l'installateur existe seulement pour Windows. Générez l
 
 ## But du jeu
 
-Faites disparaître toutes les bananes et amassez toutes les pièces pour réussir le niveau. Bien entendu, Mordicus doit s'en tirer indemne!
+Faites disparaître toutes les bananes et ramassez toutes les pièces pour réussir le niveau. Bien entendu, Mordicus doit s'en tirer indemne!
 
 ## Contrôles
 
