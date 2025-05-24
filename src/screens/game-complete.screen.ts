@@ -1,17 +1,16 @@
 import { merge, tap } from 'rxjs';
 import { Game, ScreenFn$ } from '../mordicus';
-import { LevelType } from '../levels';
 import { createTitleScreenFn$ } from './title.screen';
+import { getGameConfig } from '../config';
 
 interface IGameCompleteScreenData {
   score: number;
-  levelType: LevelType;
 }
 
 export const createGameCompleteScreenFn$ = (
   data: IGameCompleteScreenData,
 ): ScreenFn$ => {
-  updateBestTotalScore(data.levelType, data.score);
+  updateBestTotalScore(data.score);
 
   return (game: Game) => {
     drawSync(game, data);
@@ -24,22 +23,22 @@ export const createGameCompleteScreenFn$ = (
   };
 };
 
-const getBestTotalScoreKey = (levelType: LevelType): string =>
-  `best-total-score-${levelType}-levels`;
+const getBestTotalScoreKey = (): string =>
+  `best-total-score-${getGameConfig().levelType}-levels`;
 
-export const getBestTotalScore = (levelType: LevelType): number =>
-  Number.parseInt(localStorage.getItem(getBestTotalScoreKey(levelType)) ?? '0');
+export const getBestTotalScore = (): number =>
+  Number.parseInt(localStorage.getItem(getBestTotalScoreKey()) ?? '0');
 
-export const updateBestTotalScore = (levelType: LevelType, score: number): void =>
+export const updateBestTotalScore = (score: number): void =>
   localStorage.setItem(
-    getBestTotalScoreKey(levelType),
-    `${Math.max(score, getBestTotalScore(levelType))}`,
+    getBestTotalScoreKey(),
+    `${Math.max(score, getBestTotalScore())}`,
   );
 
 const drawSync = (game: Game, data: IGameCompleteScreenData) => {
   game.canvas.clearScreen();
   const current = `${data.score}`.padStart(6, '0');
-  const best = `${getBestTotalScore(data.levelType)}`.padStart(6, '0');
+  const best = `${getBestTotalScore()}`.padStart(6, '0');
   game.canvas.drawDialog([
     'FÉLICITATIONS!',
     `VOTRE SCORE: ${current}`,

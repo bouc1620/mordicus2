@@ -8,12 +8,14 @@ import {
   last,
   map,
   merge,
+  NEVER,
   Observable,
   of,
   switchMap,
   takeWhile,
   tap,
 } from 'rxjs';
+import { assert } from 'ts-essentials';
 import { getGameConfig, viewConfig } from '../config';
 import { Level, updateBestScore } from '../levels';
 import { XBoxGamepadButtons } from '../gamepad-events';
@@ -51,7 +53,9 @@ class UndoRedoStack {
   }
 
   push(snapshot: Logic.ILevelSnapshot): void {
-    this._list = this._list.slice(0, this._pos + 1);
+    const newLength = this._pos + 1;
+    const start = newLength > 1000 ? 900 : 0;
+    this._list = this._list.slice(start, newLength);
     this._list.push(snapshot);
     this._pos = this._list.length - 1;
   }
@@ -69,12 +73,10 @@ export const createLevelScreenFn$ = (data: ILevelScreenData): ScreenFn$ => {
     : undefined;
 
   return (game: Game) => {
-    // avoid overwritting the saved password with the first available password
-    if (
-      game.levels.getCurrentPassword(state.level.stage) !==
-      game.levels.getFirstPassword()
-    ) {
-      game.levels.saveCurrentPassword(state.level.stage);
+    const furthestPlayedStage = game.levels.getFurthestPlayedLevel().stage;
+    const checkpointStage = game.levels.getCheckpointStage(state.level.stage);
+    if (furthestPlayedStage < checkpointStage) {
+      game.levels.savePassword(state.level.stage);
     }
 
     drawSync(game, state);
@@ -107,36 +109,44 @@ export const createLevelScreenFn$ = (data: ILevelScreenData): ScreenFn$ => {
           );
         }
 
+        const undoRedoKeys$ = undoStack
+          ? merge(
+              merge(
+                game.keyboardEvents.all$.pipe(filter((key) => key === 'z')),
+                merge(
+                  game.gamepadEvents.buttonPressed$(XBoxGamepadButtons.LB),
+                  game.gamepadEvents.buttonRepeat$(XBoxGamepadButtons.LB, {
+                    delay: 30,
+                    initialDelay: 500,
+                  }),
+                ),
+              ).pipe(map(() => 'undo' as const)),
+              merge(
+                game.keyboardEvents.all$.pipe(filter((key) => key === 'y')),
+                merge(
+                  game.gamepadEvents.buttonPressed$(XBoxGamepadButtons.RB),
+                  game.gamepadEvents.buttonRepeat$(XBoxGamepadButtons.RB, {
+                    delay: 30,
+                    initialDelay: 500,
+                  }),
+                ),
+              ).pipe(map(() => 'redo' as const)),
+            )
+          : NEVER;
+
         return merge(
           of(undefined),
           merge(game.keyboardEvents.direction$, game.gamepadEvents.direction$),
-          merge(
-            game.keyboardEvents.all$.pipe(filter((key) => key === 'z')),
-            merge(
-              game.gamepadEvents.buttonPressed$(XBoxGamepadButtons.LB),
-              game.gamepadEvents.buttonRepeat$(XBoxGamepadButtons.LB, {
-                delay: 30,
-                initialDelay: 500,
-              }),
-            ),
-          ).pipe(map(() => 'undo' as const)),
-          merge(
-            game.keyboardEvents.all$.pipe(filter((key) => key === 'y')),
-            merge(
-              game.gamepadEvents.buttonPressed$(XBoxGamepadButtons.RB),
-              game.gamepadEvents.buttonRepeat$(XBoxGamepadButtons.RB, {
-                delay: 30,
-                initialDelay: 500,
-              }),
-            ),
-          ).pipe(map(() => 'redo' as const)),
+          undoRedoKeys$,
         ).pipe(
           exhaustMap((key) => {
             if (key === 'undo' || key === 'redo') {
+              assert(undoStack, 'undefined undo/redo stack');
+
               return of(undefined).pipe(
                 tap(() => {
                   const recoveredState =
-                    key === 'undo' ? undoStack?.undo() : undoStack?.redo();
+                    key === 'undo' ? undoStack.undo() : undoStack.redo();
 
                   if (!recoveredState) {
                     return;

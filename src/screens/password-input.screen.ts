@@ -1,15 +1,15 @@
-import { assert } from 'ts-essentials';
 import { map, merge, tap } from 'rxjs';
 import { XBoxGamepadButtons } from '../gamepad-events';
 import { getGameConfig } from '../config';
 import { Game, ScreenFn$ } from '../mordicus';
 import { createLevelScreenFn$ } from './level.screen';
-import { getSavedPassword } from '../levels';
 
 export const createPasswordInputScreenFn$ = (): ScreenFn$ => {
-  let input = getSavedPassword() ?? '';
+  let input = '';
 
   return (game: Game) => {
+    input = game.levels.getFurthestPlayedLevel().password;
+
     drawSync(game, input);
 
     return merge(
@@ -61,11 +61,13 @@ export const createPasswordInputScreenFn$ = (): ScreenFn$ => {
       ),
       merge(game.keyboardEvents.confirm$, game.gamepadEvents.confirm$).pipe(
         tap(() => {
-          const level = game.levels.findLevelWithPassword(input);
+          const level = game.levels.findLevelFromPassword(input);
 
           if (!level) {
             return;
           }
+
+          game.levels.savePassword(level.stage);
 
           game.screenFn$$.next(
             createLevelScreenFn$({
@@ -81,16 +83,9 @@ export const createPasswordInputScreenFn$ = (): ScreenFn$ => {
         game.gamepadEvents.buttonPressed$(XBoxGamepadButtons.Y),
       ).pipe(
         tap(() => {
-          const level = game.levels.findLevelWithStageNumber(
-            1,
-            getGameConfig().levelType,
-          );
-
-          assert(level, 'unexpected error, could not find first level');
-
           game.screenFn$$.next(
             createLevelScreenFn$({
-              level,
+              level: game.levels.getFirstLevel(),
               score: 0,
               lives: getGameConfig().startLives,
             }),

@@ -4,7 +4,7 @@ import { createTitleScreenFn$ } from './title.screen';
 
 export const createGameOverScreenFn$ = (stage: number): ScreenFn$ => {
   return (game: Game) => {
-    const password = game.levels.getCurrentPassword(stage);
+    const password = game.levels.getPasswordOnStage(stage);
 
     drawSync(game, password);
 

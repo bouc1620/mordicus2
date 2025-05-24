@@ -1,5 +1,4 @@
 import { filter, merge, tap } from 'rxjs';
-import { assert } from 'ts-essentials';
 import { XBoxGamepadButtons } from '../gamepad-events';
 import { getGameConfig } from '../config';
 import { ScreenFn$, Game } from '../mordicus';
@@ -24,16 +23,9 @@ export const createUsePasswordQueryScreenFn$ = (): ScreenFn$ => {
         game.gamepadEvents.buttonPressed$(XBoxGamepadButtons.B),
       ).pipe(
         tap(() => {
-          const level = game.levels.findLevelWithStageNumber(
-            1,
-            getGameConfig().levelType,
-          );
-
-          assert(level, 'unexpected error, could not find first level');
-
           game.screenFn$$.next(
             createLevelScreenFn$({
-              level,
+              level: game.levels.getFirstLevel(),
               score: 0,
               lives: getGameConfig().startLives,
             }),

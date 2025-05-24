@@ -40,10 +40,6 @@ export const updateBestScore = (password: string, bonusLeft: number): void =>
 
 const lastLevelPasswordKey = 'last-level-password';
 
-export const getSavedPassword = (): string | undefined => {
-  return localStorage.getItem(lastLevelPasswordKey) ?? undefined;
-};
-
 export class Levels {
   private _originalLevelsMap = new Map<string, Level>();
   private _customLevelsMap = new Map<string, Level>();
@@ -92,54 +88,64 @@ export class Levels {
     );
   }
 
-  findLevelWithPassword(password: string): Level | undefined {
-    return (
-      this._originalLevelsMap.get(password) ?? this._customLevelsMap.get(password)
-    );
+  findLevelFromPassword(password: string): Level | undefined {
+    const levelsMap =
+      getGameConfig().levelType === 'original'
+        ? this._originalLevelsMap
+        : this._customLevelsMap;
+    return levelsMap.get(password);
   }
 
-  findLevelWithStageNumber(
-    stage: number,
-    levelType: 'original' | 'custom' = 'original',
-  ): Level | undefined {
+  findLevelFromStageNumber(stage: number): Level | undefined {
     assert(
       stage > 0,
       `stage number should be an integer greater than zero, requested stage #${stage}`,
     );
 
     const levelsMap =
-      levelType === 'original' ? this._originalLevelsMap : this._customLevelsMap;
+      getGameConfig().levelType === 'original'
+        ? this._originalLevelsMap
+        : this._customLevelsMap;
     const iter = levelsMap.entries();
     while (--stage > 0) iter.next();
     return iter.next().value?.[1];
   }
 
-  getFirstPassword(): string | undefined {
-    const gameConfig = getGameConfig();
-    return this.getCurrentPassword(
-      Math.max(gameConfig.getPasswordEveryXLevels - 1, 1),
+  getFirstLevel(): Level {
+    const firstLevel = this.findLevelFromStageNumber(1);
+
+    assert(firstLevel, 'could not find first level');
+
+    return firstLevel;
+  }
+
+  getFurthestPlayedLevel(): Level {
+    const savedLevel =
+      this.findLevelFromPassword(localStorage.getItem(lastLevelPasswordKey) ?? '') ??
+      this.getFirstLevel();
+
+    return (
+      this.findLevelFromPassword(this.getPasswordOnStage(savedLevel.stage) ?? '') ??
+      this.getFirstLevel()
     );
   }
 
-  getCurrentPassword(stage: number): string | undefined {
-    const gameConfig = getGameConfig();
-    const checkpointStage = Math.max(
-      ~~(stage / gameConfig.getPasswordEveryXLevels) *
-        gameConfig.getPasswordEveryXLevels,
+  getCheckpointStage(stage: number): number {
+    return Math.max(
+      ~~(stage / getGameConfig().getPasswordEveryXLevels) *
+        getGameConfig().getPasswordEveryXLevels,
       1,
     );
-
-    return this.findLevelWithStageNumber(checkpointStage, gameConfig.levelType)
-      ?.password;
   }
 
-  saveCurrentPassword(stage: number): void {
-    const password = this.getCurrentPassword(stage);
+  getPasswordOnStage(stage: number): string {
+    return (
+      this.findLevelFromStageNumber(this.getCheckpointStage(stage)) ??
+      this.getFirstLevel()
+    ).password;
+  }
 
-    if (!password) {
-      return;
-    }
-
-    localStorage.setItem(lastLevelPasswordKey, password);
+  savePassword(stage: number): void {
+    localStorage.setItem(lastLevelPasswordKey, this.getPasswordOnStage(stage));
   }
 }

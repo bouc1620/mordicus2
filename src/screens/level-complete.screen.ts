@@ -1,10 +1,11 @@
 import { filter, merge, tap } from 'rxjs';
 import { XBoxGamepadButtons } from '../gamepad-events';
 import { getBestBonusForLevel, Level } from '../levels';
+import { getGameConfig } from '../config';
 import { Game, ScreenFn$ } from '../mordicus';
 import { createLevelScreenFn$ } from './level.screen';
 import { createGameCompleteScreenFn$ } from './game-complete.screen';
-import { getGameConfig } from '../config';
+import { createGainNewPasswordScreenFn$ } from './gain-new-password.screen';
 
 export const createLevelCompleteScreenFn$ = (data: {
   level: Level;
@@ -34,23 +35,33 @@ export const createLevelCompleteScreenFn$ = (data: {
         game.gamepadEvents.buttonPressed$(XBoxGamepadButtons.B),
       ).pipe(
         tap(() => {
-          const nextLevel = game.levels.findLevelWithStageNumber(
+          const nextLevel = game.levels.findLevelFromStageNumber(
             data.level.stage + 1,
           );
 
           if (nextLevel) {
-            const gainNewLifeAfterXPoints = getGameConfig().gainNewLifeAfterXPoints;
             const lives = Math.min(
               data.lives +
-                (~~(data.previousScore / gainNewLifeAfterXPoints) <
-                ~~(data.newScore / gainNewLifeAfterXPoints)
+                (~~(data.previousScore / getGameConfig().gainNewLifeAfterXPoints) <
+                ~~(data.newScore / getGameConfig().gainNewLifeAfterXPoints)
                   ? 1
                   : 0),
               99,
             );
 
+            const previousPassword = game.levels.getPasswordOnStage(
+              data.level.stage,
+            );
+            const newPassword = game.levels.getPasswordOnStage(nextLevel.stage);
+
+            const createScreenFn$ =
+              getGameConfig().getPasswordEveryXLevels > 1 &&
+              previousPassword !== newPassword
+                ? createGainNewPasswordScreenFn$
+                : createLevelScreenFn$;
+
             game.screenFn$$.next(
-              createLevelScreenFn$({
+              createScreenFn$({
                 level: nextLevel,
                 score: data.newScore,
                 lives,
@@ -60,7 +71,6 @@ export const createLevelCompleteScreenFn$ = (data: {
             game.screenFn$$.next(
               createGameCompleteScreenFn$({
                 score: data.newScore,
-                levelType: data.level.levelType,
               }),
             );
           }
