@@ -38,7 +38,7 @@ export const updateBestScore = (password: string, bonusLeft: number): void =>
     `${Math.max(bonusLeft, getBestBonusForLevel(password))}`,
   );
 
-const lastLevelPasswordKey = 'last-level-password';
+const savedPasswordKey = `saved-password-${getGameConfig().levelType}-levels`;
 
 export class Levels {
   private _originalLevelsMap = new Map<string, Level>();
@@ -119,9 +119,9 @@ export class Levels {
     return firstLevel;
   }
 
-  getFurthestPlayedLevel(): Level {
+  getStoredCheckpointLevel(): Level {
     const savedLevel =
-      this.findLevelFromPassword(localStorage.getItem(lastLevelPasswordKey) ?? '') ??
+      this.findLevelFromPassword(localStorage.getItem(savedPasswordKey) ?? '') ??
       this.getFirstLevel();
 
     return (
@@ -130,7 +130,7 @@ export class Levels {
     );
   }
 
-  getCheckpointStage(stage: number): number {
+  getCheckpointForStage(stage: number): number {
     return Math.max(
       ~~(stage / getGameConfig().getPasswordEveryXLevels) *
         getGameConfig().getPasswordEveryXLevels,
@@ -140,12 +140,12 @@ export class Levels {
 
   getPasswordOnStage(stage: number): string {
     return (
-      this.findLevelFromStageNumber(this.getCheckpointStage(stage)) ??
+      this.findLevelFromStageNumber(this.getCheckpointForStage(stage)) ??
       this.getFirstLevel()
     ).password;
   }
 
   savePassword(stage: number): void {
-    localStorage.setItem(lastLevelPasswordKey, this.getPasswordOnStage(stage));
+    localStorage.setItem(savedPasswordKey, this.getPasswordOnStage(stage));
   }
 }

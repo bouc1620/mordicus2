@@ -73,9 +73,9 @@ export const createLevelScreenFn$ = (data: ILevelScreenData): ScreenFn$ => {
     : undefined;
 
   return (game: Game) => {
-    const furthestPlayedStage = game.levels.getFurthestPlayedLevel().stage;
-    const checkpointStage = game.levels.getCheckpointStage(state.level.stage);
-    if (furthestPlayedStage < checkpointStage) {
+    const savedLevelStage = game.levels.getStoredCheckpointLevel().stage;
+    const checkpointStage = game.levels.getCheckpointForStage(state.level.stage);
+    if (savedLevelStage < checkpointStage) {
       game.levels.savePassword(state.level.stage);
     }
 
