@@ -9,7 +9,7 @@ const config: ForgeConfig = {
   },
   makers: [
     new MakerSquirrel({
-      setupExe: 'Mordicus 2 - Setup.exe',
+      setupExe: 'Mordicus - Setup.exe',
       setupIcon: 'public/icons/setup.ico',
       loadingGif: undefined,
     }),

@@ -1,7 +1,7 @@
 {
-  "name": "mordicus2",
-  "productName": "Mordicus 2",
-  "description": "Reproduction du jeu Mordicus 2",
+  "name": "mordicus",
+  "productName": "Mordicus",
+  "description": "Reproduction du jeu Mordicus",
   "version": "1.0.0",
   "main": ".vite/build/main.js",
   "scripts": {

@@ -16,10 +16,10 @@ export const createGameOverScreenFn$ = (stage: number): ScreenFn$ => {
   };
 };
 
-const drawSync = (game: Game, password: string | undefined): void => {
-  game.canvas.drawDialog(
-    password
-      ? ['VOICI VOTRE', `CODE D'ACCÈS: ${password}`, 'APPUYEZ SUR ✓']
-      : ['', 'APPUYEZ SUR ✓'],
-  );
+const drawSync = (game: Game, password: string): void => {
+  game.canvas.drawDialog([
+    'VOICI VOTRE',
+    `CODE D'ACCÈS: ${password}`,
+    'APPUYEZ SUR ✓',
+  ]);
 };
