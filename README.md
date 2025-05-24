@@ -29,19 +29,13 @@ Le jeu sauvegarde en localStorage les meilleurs pointages (les "BONI" les plus Ã
 
 ## Captures
 
-Captures du jeu original:
+Premier niveau du jeu original:
 
 <p align="center"><img src="captures/original/niveau1.png" alt="niveau 1"></img></p>
 
-<p align="center"><img src="captures/original/niveau3.png" alt="niveau 3"></img></p>
-
 Captures de la reproduction:
 
-<p align="center"><img src="captures/reproduction/titre.png" alt="Ã©cran titre"></img></p>
-
 <p align="center"><img src="captures/reproduction/001.png" alt="niveau 1"></img></p>
-
-<p align="center"><img src="captures/reproduction/003.png" alt="niveau 3"></img></p>
 
 <p align="center"><img src="captures/reproduction/097.png" alt="niveau 97"></img></p>
 
