@@ -39,7 +39,13 @@ export const createLevelCompleteScreenFn$ = (data: {
             data.level.stage + 1,
           );
 
-          if (nextLevel) {
+          if (!nextLevel) {
+            game.screenFn$$.next(
+              createGameCompleteScreenFn$({
+                score: data.newScore,
+              }),
+            );
+          } else {
             const lives = Math.min(
               data.lives +
                 (~~(data.previousScore / getGameConfig().gainNewLifeAfterXPoints) <
@@ -49,10 +55,12 @@ export const createLevelCompleteScreenFn$ = (data: {
               99,
             );
 
-            const previousPassword = game.levels.getPasswordOnStage(
+            const previousPassword = game.levels.getCheckpointForStage(
               data.level.stage,
-            );
-            const newPassword = game.levels.getPasswordOnStage(nextLevel.stage);
+            ).password;
+            const newPassword = game.levels.getCheckpointForStage(
+              nextLevel.stage,
+            ).password;
 
             const createScreenFn$ =
               getGameConfig().getPasswordEveryXLevels > 1 &&
@@ -65,12 +73,6 @@ export const createLevelCompleteScreenFn$ = (data: {
                 level: nextLevel,
                 score: data.newScore,
                 lives,
-              }),
-            );
-          } else {
-            game.screenFn$$.next(
-              createGameCompleteScreenFn$({
-                score: data.newScore,
               }),
             );
           }

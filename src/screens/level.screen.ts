@@ -73,10 +73,13 @@ export const createLevelScreenFn$ = (data: ILevelScreenData): ScreenFn$ => {
     : undefined;
 
   return (game: Game) => {
-    const savedLevelStage = game.levels.getStoredCheckpointLevel().stage;
-    const checkpointStage = game.levels.getCheckpointForStage(state.level.stage);
-    if (savedLevelStage < checkpointStage) {
-      game.levels.savePassword(state.level.stage);
+    const savedCheckpoint = game.levels.getCheckpointForSavedStage().stage;
+    const currentCheckpoint = game.levels.getCheckpointForStage(
+      state.level.stage,
+    ).stage;
+
+    if (savedCheckpoint < currentCheckpoint) {
+      game.levels.savePassword(state.level.password);
     }
 
     drawSync(game, state);

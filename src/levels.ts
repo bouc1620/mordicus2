@@ -119,33 +119,29 @@ export class Levels {
     return firstLevel;
   }
 
-  getStoredCheckpointLevel(): Level {
+  getCheckpointForStage(stage: number): Level {
+    return (
+      this.findLevelFromStageNumber(
+        Math.max(
+          ~~(stage / getGameConfig().getPasswordEveryXLevels) *
+            getGameConfig().getPasswordEveryXLevels,
+          1,
+        ),
+      ) ?? this.getFirstLevel()
+    );
+  }
+
+  getCheckpointForSavedStage(): Level {
     const savedLevel =
-      this.findLevelFromPassword(localStorage.getItem(savedPasswordKey) ?? '') ??
-      this.getFirstLevel();
-
-    return (
-      this.findLevelFromPassword(this.getPasswordOnStage(savedLevel.stage) ?? '') ??
-      this.getFirstLevel()
-    );
+      this.findLevelFromPassword(this.getSavedPassword()) ?? this.getFirstLevel();
+    return this.getCheckpointForStage(savedLevel.stage);
   }
 
-  getCheckpointForStage(stage: number): number {
-    return Math.max(
-      ~~(stage / getGameConfig().getPasswordEveryXLevels) *
-        getGameConfig().getPasswordEveryXLevels,
-      1,
-    );
+  getSavedPassword(): string {
+    return localStorage.getItem(savedPasswordKey) ?? this.getFirstLevel().password;
   }
 
-  getPasswordOnStage(stage: number): string {
-    return (
-      this.findLevelFromStageNumber(this.getCheckpointForStage(stage)) ??
-      this.getFirstLevel()
-    ).password;
-  }
-
-  savePassword(stage: number): void {
-    localStorage.setItem(savedPasswordKey, this.getPasswordOnStage(stage));
+  savePassword(password: string): void {
+    localStorage.setItem(savedPasswordKey, password);
   }
 }

@@ -8,7 +8,7 @@ export const createPasswordInputScreenFn$ = (): ScreenFn$ => {
   let input = '';
 
   return (game: Game) => {
-    input = game.levels.getStoredCheckpointLevel().password;
+    input = game.levels.getSavedPassword();
 
     drawSync(game, input);
 
@@ -67,7 +67,7 @@ export const createPasswordInputScreenFn$ = (): ScreenFn$ => {
             return;
           }
 
-          game.levels.savePassword(level.stage);
+          game.levels.savePassword(level.password);
 
           game.screenFn$$.next(
             createLevelScreenFn$({
