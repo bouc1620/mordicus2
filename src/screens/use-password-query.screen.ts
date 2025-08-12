@@ -38,5 +38,5 @@ export const createUsePasswordQueryScreenFn$ = (): ScreenFn$ => {
 
 const drawSync = (game: Game): void => {
   game.canvas.clearScreen();
-  game.canvas.drawDialog(['AVEZ-VOUS UN', `CODE D'ACCÈS?`, '1-OUI 2-NON']);
+  game.canvas.drawDialog(['AVEZ-VOUS UN', `CODE D'ACCÈS?`, '1-OUI   2-NON']);
 };

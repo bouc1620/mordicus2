@@ -23,9 +23,10 @@ import * as Grid from '../grid';
 import * as Logic from '../logic';
 import * as Directions from '../directions';
 import { Game, ScreenFn$ } from '../mordicus';
-import { createGameOverScreenFn$ } from './game-over.screen';
+import { createConfirmScreenFn$ } from './confirm.screen';
 import { createRetryLevelQueryScreenFn$ } from './retry-level-query.screen';
 import { createLevelCompleteScreenFn$ } from './level-complete.screen';
+import { createCurrentPasswordScreenFn$ } from './current-password.screen';
 
 export interface ILevelScreenData {
   level: Level;
@@ -104,7 +105,11 @@ export const createLevelScreenFn$ = (data: ILevelScreenData): ScreenFn$ => {
               drawInGameMenu(game, state);
 
               if (state.lives === 0) {
-                game.screenFn$$.next(createGameOverScreenFn$(state.level.stage));
+                game.screenFn$$.next(
+                  createConfirmScreenFn$(
+                    createCurrentPasswordScreenFn$(state.level.stage),
+                  ),
+                );
               } else {
                 game.screenFn$$.next(createRetryLevelQueryScreenFn$(state));
               }
@@ -210,20 +215,26 @@ export const createLevelScreenFn$ = (data: ILevelScreenData): ScreenFn$ => {
               last(),
               tap(() => {
                 if (state.lives === 0) {
-                  game.screenFn$$.next(createGameOverScreenFn$(state.level.stage));
+                  game.screenFn$$.next(
+                    createConfirmScreenFn$(
+                      createCurrentPasswordScreenFn$(state.level.stage),
+                    ),
+                  );
                 } else if (Logic.isPlayerDead(state.grid)) {
                   game.screenFn$$.next(createRetryLevelQueryScreenFn$(state));
                 } else if (Logic.isSuccess(state.grid)) {
                   updateBestScore(state.level.password, state.bonus);
 
                   game.screenFn$$.next(
-                    createLevelCompleteScreenFn$({
-                      level: state.level,
-                      previousScore: state.score,
-                      newScore:
-                        state.score + getGameConfig().pointsPerLevel + state.bonus,
-                      lives: state.lives,
-                    }),
+                    createConfirmScreenFn$(
+                      createLevelCompleteScreenFn$({
+                        level: state.level,
+                        previousScore: state.score,
+                        newScore:
+                          state.score + getGameConfig().pointsPerLevel + state.bonus,
+                        lives: state.lives,
+                      }),
+                    ),
                   );
                 }
 
