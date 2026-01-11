@@ -1,4 +1,5 @@
 {
+  "webpage": "https://bouc1620.itch.io/mordicus",
   "description": {
     "fr": "Une reproduction du jeu Mordicus des années 1990 sur Vidéoway. Développé en TypeScript avec RxJS, il gère de manière réactive les entrées utilisateur et les animations, prend en charge la manette et le clavier, et produit une application de bureau avec Electron.",
     "en": "A modern remake of the 1990s Vidéoway game Mordicus. Built in TypeScript with RxJS, it handles user inputs and screen animations reactively, supports gamepad and keyboard, and packages the game as a desktop app with Electron."
