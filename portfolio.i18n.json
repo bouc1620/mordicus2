@@ -17,8 +17,5 @@
       "Vite",
       "Electron"
     ]
-  },
-  "languages": [
-    "TypeScript"
-  ]
+  }
 }
